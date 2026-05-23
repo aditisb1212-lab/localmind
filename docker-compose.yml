@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: localmind-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - localmind-data:/app/data
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - DB_PATH=/app/data/localmind.db
+      - CHROMADB_DIR=/app/data/chromadb
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    container_name: localmind-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  localmind-data:
+    name: localmind-data
