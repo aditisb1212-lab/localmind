@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: localmind-backend
+    env: docker
+    branch: main
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /health
+
+  - type: static
+    name: localmind-frontend
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
