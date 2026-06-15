@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { exportSession } from "../utils/api";
 import { AppLogoIcon, LockIcon } from "./Icons";
 
-export default function ChatWindow({ messages, loading, onSend, onStop, sessionId }) {
+export default function ChatWindow({ messages, loading, onSend, onDeleteMessage, onStop, sessionId }) {
   const [input, setInput] = useState("");
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
@@ -16,6 +16,34 @@ export default function ChatWindow({ messages, loading, onSend, onStop, sessionI
   const [exportFormat, setExportFormat] = useState("markdown");
   const [copiedMsgId, setCopiedMsgId] = useState(null);
   const [hoveredStatsId, setHoveredStatsId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+  // Inline delete control with a lightweight two-step confirm (no window.confirm).
+  const renderDeleteControl = (msgId) =>
+    confirmDeleteId === msgId ? (
+      <span className="flex items-center gap-1 text-xs">
+        <span className="text-gray-500">Delete?</span>
+        <button
+          onClick={() => { onDeleteMessage?.(msgId); setConfirmDeleteId(null); }}
+          className="px-1.5 py-0.5 rounded bg-red-600/80 hover:bg-red-600 text-white transition"
+          title="Confirm delete"
+        >Yes</button>
+        <button
+          onClick={() => setConfirmDeleteId(null)}
+          className="px-1.5 py-0.5 rounded hover:bg-gray-700 text-gray-400 transition"
+          title="Cancel"
+        >No</button>
+      </span>
+    ) : (
+      <button
+        onClick={() => setConfirmDeleteId(msgId)}
+        className="p-1 rounded hover:bg-gray-800 text-gray-500 hover:text-red-400 transition"
+        title="Delete message"
+        aria-label="Delete message"
+      >
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+      </button>
+    );
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -160,7 +188,8 @@ export default function ChatWindow({ messages, loading, onSend, onStop, sessionI
                 </div>
               )}
               {msg.role === "user" && (
-                <div className="text-right mt-1 mr-1">
+                <div className="flex justify-end items-center gap-1 mt-1 mr-1">
+                  {renderDeleteControl(msg.id)}
                   <span className="text-xs text-gray-400">You</span>
                 </div>
               )}
@@ -178,6 +207,9 @@ export default function ChatWindow({ messages, loading, onSend, onStop, sessionI
                       <CopyIcon className="w-4 h-4" />
                     )}
                   </button>
+
+                  {/* Delete button */}
+                  {renderDeleteControl(msg.id)}
 
                   {/* Stats hover button */}
                   <div
