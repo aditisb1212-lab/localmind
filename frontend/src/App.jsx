@@ -117,6 +117,11 @@ export default function App() {
       } else {
         setOllamaOk(false);
       }
+       if (settRes.status === "fulfilled") {
+        setSettings(settRes.value);
+        if (settRes.value.default_model) setModel(settRes.value.default_model);
+        if (settRes.value.default_language) setLanguage(settRes.value.default_language);
+      }
     } catch {}
   }
 
